@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { publicPath } from "@/lib/publicPath";
 
 export function BrandLoader({
   caption,
@@ -18,7 +19,7 @@ export function BrandLoader({
         <span aria-hidden className="animate-loader-ring absolute inset-0 rounded-full bg-brand/15" />
         <span aria-hidden className="animate-loader-ring absolute inset-0 rounded-full bg-brand/10 [animation-delay:0.6s]" />
         <Image
-          src="/brand/motherhood-mark.webp"
+          src={publicPath("/brand/motherhood-mark.webp")}
           alt=""
           width={size}
           height={size}

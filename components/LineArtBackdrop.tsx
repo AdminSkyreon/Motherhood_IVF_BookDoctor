@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { publicPath } from "@/lib/publicPath";
 
 export type LineArtVariant = "subtle" | "feature" | "none";
 
-const MASK = "url(/brand/lineart-mother.webp)";
+const MASK = `url(${publicPath("/brand/lineart-mother.webp")})`;
 
 // Fade in only on the first page of a visit, not on every client navigation.
 let hasFadedIn = false;

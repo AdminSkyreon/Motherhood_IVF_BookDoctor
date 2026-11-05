@@ -9,6 +9,7 @@ import { BeforeVisitCard } from "@/components/BeforeVisitCard";
 import { BookingDetailsCard } from "@/components/BookingDetailsCard";
 import { BrandLoader } from "@/components/BrandLoader";
 import { PhoneShell } from "@/components/PhoneShell";
+import { publicPath } from "@/lib/publicPath";
 import { useAppStore } from "@/lib/store";
 import { useBooking } from "@/lib/useBooking";
 
@@ -82,7 +83,7 @@ export function BookingScreen({ id, variant }: { id: string; variant: "confirmat
         <div className="mt-5 text-center">
           <span className="relative mx-auto flex h-[5.25rem] w-[5.25rem] items-center justify-center">
             <span className="animate-pop-in flex h-[5.25rem] w-[5.25rem] items-center justify-center rounded-full bg-brand-soft/70 ring-[6px] ring-brand-soft/40">
-              <Image src="/brand/motherhood-mark.webp" alt="" width={52} height={52} priority className="h-[3.25rem] w-[3.25rem]" />
+              <Image src={publicPath("/brand/motherhood-mark.webp")} alt="" width={52} height={52} priority className="h-[3.25rem] w-[3.25rem]" />
             </span>
             {FLOATING_HEARTS.map((h, i) => (
               <Heart

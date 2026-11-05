@@ -1,11 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
+import { publicPath } from "@/lib/publicPath";
 
 export function Logo() {
   return (
     <Link href="/" aria-label="Motherhood Fertility & IVF home" className="inline-flex shrink-0">
       <Image
-        src="/brand/motherhood-logo.webp"
+        src={publicPath("/brand/motherhood-logo.webp")}
         alt="Motherhood Fertility & IVF"
         width={540}
         height={208}

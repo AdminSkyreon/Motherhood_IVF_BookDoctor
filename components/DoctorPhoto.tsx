@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { publicPath } from "@/lib/publicPath";
 import type { Doctor } from "@/lib/types";
 
 export function DoctorPhoto({
@@ -20,7 +21,7 @@ export function DoctorPhoto({
       style={{ width: rem, height: rem }}
     >
       <Image
-        src={doctor.photo}
+        src={publicPath(doctor.photo)}
         alt={doctor.name}
         fill
         sizes={`${Math.ceil((size * 17) / 16)}px`}
