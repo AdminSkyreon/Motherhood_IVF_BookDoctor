@@ -211,7 +211,7 @@ export const demoApi = {
     return { booking };
   },
 
-  async getBooking(id: string, _token: string | null): Promise<{ booking: Booking }> {
+  async getBooking(id: string): Promise<{ booking: Booking }> {
     const booking = demoStore.bookings.get(id);
     if (!booking) throw new ApiRequestError("Booking not found.", 404);
     return { booking };
