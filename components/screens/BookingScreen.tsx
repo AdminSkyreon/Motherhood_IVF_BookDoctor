@@ -122,7 +122,7 @@ export function BookingScreen({ id, variant }: { id: string; variant: "confirmat
 
       <div className="mt-6 flex gap-3">
         {isConfirmation ? (
-          <Link href={`/bookings/${booking.id}`} className={pillLink}>
+          <Link href={`/bookings/detail?id=${encodeURIComponent(booking.id)}`} className={pillLink}>
             View booking
           </Link>
         ) : null}

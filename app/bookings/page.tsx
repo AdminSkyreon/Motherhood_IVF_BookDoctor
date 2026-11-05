@@ -30,7 +30,7 @@ export default function MyBookingsPage() {
           {list.map((booking) => (
             <li key={booking.id}>
               <Link
-                href={`/bookings/${booking.id}`}
+                href={`/bookings/detail?id=${encodeURIComponent(booking.id)}`}
                 className="flex items-center gap-4 rounded-[1.25rem] border border-line bg-white px-5 py-4 shadow-card transition hover:border-sky-line"
               >
                 {booking.doctor.photo ? (

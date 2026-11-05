@@ -132,7 +132,7 @@ export default function ReviewPage() {
       );
       addBooking(booking);
       setCheckoutOpen(false);
-      router.push(`/book/confirmation/${booking.id}`);
+      router.push(`/book/confirmation?id=${encodeURIComponent(booking.id)}`);
     } catch (e) {
       const status = e instanceof ApiRequestError ? e.status : 0;
       setCheckoutOpen(false);
