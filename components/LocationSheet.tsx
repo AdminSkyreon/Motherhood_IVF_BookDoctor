@@ -1,10 +1,11 @@
 "use client";
 
 import { Check, LocateFixed, MapPin } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { BottomSheet } from "@/components/BottomSheet";
 import { HeartSpinner } from "@/components/HeartSpinner";
-import { CITIES, centresInCity, getCentre } from "@/lib/data/centres";
+import { SearchField } from "@/components/SearchField";
+import { CENTRES, CITIES, centresInCity, getCentre } from "@/lib/data/centres";
 import { distanceKm } from "@/lib/doctors";
 import { tapFeedback } from "@/lib/haptics";
 import type { LatLng } from "@/lib/types";
@@ -37,11 +38,28 @@ export function LocationSheet({
   );
 }
 
+const ALL_CITIES = "all" as const;
+type CityFilter = typeof ALL_CITIES | string;
+
 function LocationSheetBody({ selectedCentreId, location, locating, notice, onUseLocation, onSelect }: SheetBodyProps) {
-  const [city, setCity] = useState(() => getCentre(selectedCentreId)?.city ?? CITIES[0]);
-  const centres = centresInCity(city)
-    .map((centre) => ({ centre, km: location ? distanceKm(location, centre) : null }))
-    .sort((a, b) => (a.km ?? 0) - (b.km ?? 0));
+  const [city, setCity] = useState<CityFilter>(() => getCentre(selectedCentreId)?.city ?? CITIES[0]);
+  const [locationQuery, setLocationQuery] = useState("");
+
+  const centres = useMemo(() => {
+    const base = city === ALL_CITIES ? [...CENTRES] : centresInCity(city);
+    const q = locationQuery.trim().toLowerCase();
+    const filtered = q
+      ? base.filter(
+          (centre) =>
+            centre.name.toLowerCase().includes(q) ||
+            centre.address.toLowerCase().includes(q) ||
+            centre.city.toLowerCase().includes(q),
+        )
+      : base;
+    return filtered
+      .map((centre) => ({ centre, km: location ? distanceKm(location, centre) : null }))
+      .sort((a, b) => (a.km ?? 0) - (b.km ?? 0));
+  }, [city, location, locationQuery]);
 
   return (
     <>
@@ -70,8 +88,32 @@ function LocationSheetBody({ selectedCentreId, location, locating, notice, onUse
         </span>
       </button>
 
+      <SearchField
+        className="mt-4"
+        label="Search hospital or area"
+        placeholder="Search hospital, area or city"
+        value={locationQuery}
+        onChange={setLocationQuery}
+      />
+
       <p className="mt-5 text-[0.8125rem] font-semibold uppercase tracking-wide text-muted">City</p>
       <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="City">
+        <button
+          type="button"
+          role="radio"
+          aria-checked={city === ALL_CITIES}
+          onClick={() => {
+            tapFeedback();
+            setCity(ALL_CITIES);
+          }}
+          className={`press h-10 rounded-full border px-4 text-[0.875rem] font-semibold ${
+            city === ALL_CITIES
+              ? "animate-select-pop border-navy bg-navy text-white"
+              : "border-line bg-white text-ink hover:border-navy/40"
+          }`}
+        >
+          All
+        </button>
         {CITIES.map((c) => {
           const active = c === city;
           return (
@@ -95,7 +137,10 @@ function LocationSheetBody({ selectedCentreId, location, locating, notice, onUse
       </div>
 
       <p className="mt-5 text-[0.8125rem] font-semibold uppercase tracking-wide text-muted">Hospital</p>
-      <ul className="mt-2 space-y-2" role="listbox" aria-label={`Hospitals in ${city}`}>
+      {centres.length === 0 ? (
+        <p className="mt-2 text-[0.875rem] text-muted">No hospitals match your search. Try another name or city.</p>
+      ) : null}
+      <ul className="mt-2 space-y-2" role="listbox" aria-label={city === ALL_CITIES ? "All hospitals" : `Hospitals in ${city}`}>
         {centres.map(({ centre, km }) => {
           const selected = centre.id === selectedCentreId;
           return (
@@ -118,6 +163,7 @@ function LocationSheetBody({ selectedCentreId, location, locating, notice, onUse
                 <span className="min-w-0 flex-1">
                   <span className="block text-[0.9375rem] font-bold leading-tight text-navy">{centre.name}</span>
                   <span className="mt-0.5 block truncate text-[0.75rem] text-muted">
+                    {city === ALL_CITIES ? `${centre.city} · ` : ""}
                     {km !== null ? `${formatKm(km)} · ` : ""}
                     {centre.address}
                   </span>

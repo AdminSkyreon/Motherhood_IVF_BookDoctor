@@ -2,7 +2,9 @@
 
 import { ChevronDown, ChevronRight, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { DoctorPhoto } from "@/components/DoctorPhoto";
+import { SearchField } from "@/components/SearchField";
 import { BackButton } from "@/components/BackButton";
 import { BrandLoader } from "@/components/BrandLoader";
 import { CompanionToggle } from "@/components/booking/CompanionToggle";
@@ -13,7 +15,9 @@ import { type DayPart, splitByPart, TimePicker } from "@/components/booking/Time
 import { formatKm, LocationSheet } from "@/components/LocationSheet";
 import { PhoneShell } from "@/components/PhoneShell";
 import { api, ApiRequestError } from "@/lib/api";
-import { DEFAULT_CENTRE_ID, doctorsAtCentre, getCentre, getDoctor } from "@/lib/data/centres";
+import { DEFAULT_CENTRE_ID, DOCTORS, doctorsAtCentre, getCentre, getDoctor } from "@/lib/data/centres";
+import { shortenSpecialty } from "@/lib/doctorDisplay";
+import { tapFeedback } from "@/lib/haptics";
 import { distanceKm, recommendAtCentre } from "@/lib/doctors";
 import { formatDayParts, formatTime, istHour } from "@/lib/format";
 import { isComplexCase } from "@/lib/insights";
@@ -66,6 +70,22 @@ export default function BookPage() {
   const [locating, setLocating] = useState(false);
   const [sheet, setSheet] = useState<{ open: boolean; notice: string | null }>({ open: false, notice: null });
   const [profileDoctor, setProfileDoctor] = useState<Doctor | null>(null);
+  const [doctorQuery, setDoctorQuery] = useState("");
+
+  const doctorSearchResults = useMemo(() => {
+    const q = doctorQuery.trim().toLowerCase();
+    if (!q) return [];
+    return DOCTORS.filter(
+      (d) => d.name.toLowerCase().includes(q) || d.specialty.toLowerCase().includes(q),
+    ).map((doctor) => {
+      const preferred =
+        centreId && doctor.centreIds.includes(centreId) ? centreId : doctor.centreIds[0];
+      const matchCentre = getCentre(preferred);
+      return { doctor, centre: matchCentre };
+    })
+      .filter((row): row is { doctor: Doctor; centre: NonNullable<typeof row.centre> } => Boolean(row.centre))
+      .sort((a, b) => a.doctor.name.localeCompare(b.doctor.name));
+  }, [doctorQuery, centreId]);
 
   const locate = useCallback(() => {
     setLocating(true);
@@ -189,6 +209,18 @@ export default function BookPage() {
     setSheet({ open: false, notice: null });
   };
 
+  const pickDoctor = (doctor: Doctor, targetCentreId: string) => {
+    if (targetCentreId !== centreId) {
+      selectCentre(targetCentreId);
+    }
+    const key = `${doctor.id}|${targetCentreId}`;
+    setPickedDoctor({ centreId: targetCentreId, doctorId: doctor.id });
+    setPick(null);
+    setSlotError(null);
+    setSlotsFetch({ key, status: "loading" });
+    setDoctorQuery("");
+  };
+
   const proceed = () => {
     if (!doctor || !centre || !activeSlot || !companion) return;
     selectDoctor(doctor.id, centre.id);
@@ -266,21 +298,60 @@ export default function BookPage() {
       ) : (
         <>
           <SectionLabel>Specialist</SectionLabel>
-          <DoctorCarousel
-            key={centre.id}
-            doctors={centreDoctors}
-            recommendedId={recommended?.id ?? null}
-            selectedId={doctorId}
-            onSelect={(id) => {
-              const key = `${id}|${centre.id}`;
-              setPickedDoctor({ centreId: centre.id, doctorId: id });
-              setPick(null);
-              setSlotError(null);
-              setSlotsFetch({ key, status: "loading" });
-            }}
-            onViewProfile={setProfileDoctor}
-            onOtherHospitals={() => setSheet({ open: true, notice: null })}
+          <SearchField
+            label="Search specialist by name"
+            placeholder="Search all locations by doctor name"
+            value={doctorQuery}
+            onChange={setDoctorQuery}
+            className="mb-2"
           />
+          {doctorQuery.trim() ? (
+            doctorSearchResults.length === 0 ? (
+              <p className="text-[0.8125rem] text-muted">No specialists match. Try another name or spelling.</p>
+            ) : (
+              <ul className="max-h-[14rem] space-y-2 overflow-y-auto pr-0.5" aria-label="Search results">
+                {doctorSearchResults.map(({ doctor, centre: rowCentre }) => {
+                  const selected = doctor.id === doctorId && rowCentre.id === centreId;
+                  return (
+                    <li key={doctor.id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          tapFeedback();
+                          pickDoctor(doctor, rowCentre.id);
+                        }}
+                        className={`press flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-left ${
+                          selected ? "border-sky-line bg-sky-50/80 ring-2 ring-info/20" : "border-line bg-white hover:border-sky-line"
+                        }`}
+                      >
+                        <DoctorPhoto doctor={doctor} size={44} className="rounded-xl" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[0.9375rem] font-bold text-navy">{doctor.name}</span>
+                          <span className="mt-0.5 block truncate text-[0.75rem] text-muted">
+                            {shortenSpecialty(doctor.specialty)} · {rowCentre.name.split(",")[0]}
+                          </span>
+                          <span className="mt-0.5 block truncate text-[0.6875rem] font-medium text-info">{rowCentre.city}</span>
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )
+          ) : (
+            <DoctorCarousel
+              key={centre.id}
+              doctors={centreDoctors}
+              recommendedId={recommended?.id ?? null}
+              selectedId={doctorId}
+              onSelect={(id) => {
+                const doc = getDoctor(id);
+                if (doc) pickDoctor(doc, centre.id);
+              }}
+              onViewProfile={setProfileDoctor}
+              onOtherHospitals={() => setSheet({ open: true, notice: null })}
+            />
+          )}
 
           <SectionLabel tallOnly>Date</SectionLabel>
           {!doctorId ? (
