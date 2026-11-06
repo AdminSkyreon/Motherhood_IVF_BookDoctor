@@ -45,7 +45,8 @@ export function useFlowGuard(requirement: Requirement): boolean {
   let redirect: string | null = null;
   if (pendingStep !== null) redirect = `/check/${pendingStep}`;
   else if (requirement === "result") {
-    if (!result) redirect = "/results/verify";
+    if (!isValidLead(lead)) redirect = "/results/verify";
+    else if (!result) redirect = "/results/otp";
   } else if (requirement === "bookAuth") {
     if (!result) redirect = "/results/verify";
     else if (!isValidLead(lead)) redirect = "/results/verify";

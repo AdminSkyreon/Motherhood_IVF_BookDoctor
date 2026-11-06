@@ -16,10 +16,9 @@ import { useFlowGuard } from "@/lib/useFlowGuard";
 export default function VerifyPage() {
   const router = useRouter();
   const ready = useFlowGuard("answers");
-  const answers = useAppStore((s) => s.answers);
   const lead = useAppStore((s) => s.lead);
   const setLead = useAppStore((s) => s.setLead);
-  const setResult = useAppStore((s) => s.setResult);
+  const markOtpSent = useAppStore((s) => s.markOtpSent);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -49,9 +48,9 @@ export default function VerifyPage() {
     setSubmitting(true);
     try {
       setLead({ name: name.trim(), phone, consent });
-      const result = await api.score(answers);
-      setResult(result);
-      router.push("/results");
+      const res = await api.sendOtp({ name: name.trim(), phone });
+      markOtpSent(res.sentAt, res.devCode);
+      router.push("/results/otp");
     } catch (e) {
       setErrors({ form: e instanceof ApiRequestError ? e.message : "Something went wrong." });
     } finally {
@@ -138,7 +137,7 @@ export default function VerifyPage() {
         ) : null}
 
         <PrimaryButton type="submit" loading={submitting} disabled={!ready}>
-          See my results
+          Send OTP to verify
           <ArrowRight className="h-5 w-5" aria-hidden />
         </PrimaryButton>
       </form>

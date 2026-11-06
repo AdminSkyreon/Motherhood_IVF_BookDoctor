@@ -22,18 +22,60 @@ import { BrandLoader } from "@/components/BrandLoader";
 import { PhoneShell } from "@/components/PhoneShell";
 import { ScoreGauge } from "@/components/ScoreGauge";
 import { CENTRES, DOCTORS } from "@/lib/data/centres";
-import { buildInsights, type InsightTopic } from "@/lib/insights";
+import {
+  buildInsights,
+  HIGH_SCORE_SUMMARY_THRESHOLD,
+  LOW_SCORE_SUMMARY_THRESHOLD,
+  type InsightTopic,
+} from "@/lib/insights";
 import { TOTAL_QUESTIONS } from "@/lib/questions";
 import { BAND_COPY } from "@/lib/score";
 import { useAppStore } from "@/lib/store";
 import type { Band } from "@/lib/types";
 import { useFlowGuard } from "@/lib/useFlowGuard";
 
-const HERO_TONES: Record<Band, { card: string; heading: string; chip: string }> = {
-  low: { card: "border-sky-200 bg-sky-50/70", heading: "text-info", chip: "bg-sky-100 text-info" },
-  moderate: { card: "border-brand-line bg-brand-soft/60", heading: "text-brand", chip: "bg-white text-brand" },
-  high: { card: "border-brand-line bg-brand-soft/70", heading: "text-brand-dark", chip: "bg-white text-brand-dark" },
+const HERO_TONES: Record<Band, { card: string; heading: string; chip: string; body: string }> = {
+  low: {
+    card: "border-sky-200 bg-sky-50/70",
+    heading: "text-info",
+    chip: "bg-sky-100 text-info",
+    body: "text-ink/80",
+  },
+  moderate: {
+    card: "border-brand-line bg-brand-soft/60",
+    heading: "text-brand",
+    chip: "bg-white text-brand",
+    body: "text-ink/80",
+  },
+  high: {
+    card: "border-brand-line bg-brand-soft/70",
+    heading: "text-brand-dark",
+    chip: "bg-white text-brand-dark",
+    body: "text-ink/80",
+  },
 };
+
+/** Score below 70: calm blue personalised summary. */
+const BLUE_SUMMARY_TONE = {
+  card: "border-sky-line bg-sky-50/90 shadow-[0_8px_24px_-14px_rgb(11_116_184/0.25)]",
+  heading: "text-info",
+  chip: "bg-info text-white",
+  body: "text-ink/85",
+};
+
+/** Score above 80: full pink personalised summary (matches reassuring moderate copy). */
+const PINK_SUMMARY_TONE = {
+  card: "border-brand-line bg-brand-soft shadow-[0_8px_24px_-14px_rgb(217_80_111/0.4)]",
+  heading: "text-brand-dark",
+  chip: "bg-brand text-white",
+  body: "text-ink/85",
+};
+
+function summaryTone(score: number, band: Band) {
+  if (score > HIGH_SCORE_SUMMARY_THRESHOLD) return PINK_SUMMARY_TONE;
+  if (score < LOW_SCORE_SUMMARY_THRESHOLD) return BLUE_SUMMARY_TONE;
+  return HERO_TONES[band];
+}
 
 const TOPIC_ICONS: Record<InsightTopic, LucideIcon> = {
   duration: Clock,
@@ -60,7 +102,10 @@ export default function ResultsPage() {
   const result = useAppStore((s) => s.result);
   const answers = useAppStore((s) => s.answers);
   const lead = useAppStore((s) => s.lead);
-  const insights = useMemo(() => (result ? buildInsights(answers, result.band) : null), [answers, result]);
+  const insights = useMemo(
+    () => (result ? buildInsights(answers, result.band, result.score) : null),
+    [answers, result],
+  );
 
   if (!ready || !result || !insights) {
     return (
@@ -71,7 +116,7 @@ export default function ResultsPage() {
   }
 
   const copy = BAND_COPY[result.band];
-  const tone = HERO_TONES[result.band];
+  const tone = summaryTone(result.score, result.band);
   const firstName = lead.name.trim().split(/\s+/)[0];
 
   return (
@@ -79,8 +124,8 @@ export default function ResultsPage() {
       lineArt="feature"
       footer={
         <Link
-          href="/book/verify"
-          className="press shine bg-cta inline-flex h-12 w-full items-center justify-center gap-2 rounded-full px-4 text-[1rem] font-semibold text-white shadow-cta hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand short:h-11"
+          href="/book/patient"
+          className="press shine shine-interactive cta-hover bg-cta inline-flex h-12 w-full items-center justify-center gap-2 rounded-full px-4 text-[1rem] font-semibold text-white shadow-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand short:h-11"
         >
           <CalendarDays className="h-5 w-5 shrink-0" aria-hidden />
           Book your consultation
@@ -113,7 +158,7 @@ export default function ResultsPage() {
           Your personalised summary
         </span>
         <h2 className={`mt-3 text-[1.25rem] font-bold leading-snug ${tone.heading}`}>{insights.headline}</h2>
-        <p className="mt-2 text-[0.9375rem] leading-relaxed text-ink/80">{insights.subhead}</p>
+        <p className={`mt-2 text-[0.9375rem] leading-relaxed ${tone.body}`}>{insights.subhead}</p>
       </section>
 
       {insights.findings.length > 0 && (

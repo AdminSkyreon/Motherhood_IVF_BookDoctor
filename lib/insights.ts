@@ -282,14 +282,25 @@ export function isComplexCase(answers: Answers, band: Band): boolean {
   return band === "high" || treatment === "iui" || treatment === "ivf";
 }
 
-export function buildInsights(answers: Answers, band: Band): Insights {
+/** Personalised summary card colours by score (see results page). */
+export const LOW_SCORE_SUMMARY_THRESHOLD = 70;
+export const HIGH_SCORE_SUMMARY_THRESHOLD = 80;
+
+export function summaryHeadlines(band: Band, score: number): { headline: string; subhead: string } {
+  if (score > HIGH_SCORE_SUMMARY_THRESHOLD) return HEADLINES.moderate;
+  return HEADLINES[band];
+}
+
+export function buildInsights(answers: Answers, band: Band, score?: number): Insights {
   const all = collectFindings(answers).sort((a, b) => b.priority - a.priority);
   const attention = all.filter((f) => f.tone === "attention");
   const positive = all.filter((f) => f.tone === "positive");
   const findings = [...attention, ...positive].slice(0, MAX_FINDINGS);
+  const headlines =
+    score !== undefined ? summaryHeadlines(band, score) : HEADLINES[band];
 
   return {
-    ...HEADLINES[band],
+    ...headlines,
     findings,
     nextSteps: collectSteps(answers, band),
     complexCase: isComplexCase(answers, band),

@@ -215,7 +215,7 @@ export default function BookPage() {
             type="button"
             onClick={proceed}
             disabled={!activeSlot || !companion || !doctorId}
-            className={`press bg-cta inline-flex h-12 w-full short:h-11 tall:h-13 items-center justify-center gap-2 rounded-full text-[1rem] font-semibold text-white shadow-cta hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none ${activeSlot ? "shine" : ""}`}
+            className={`press cta-hover bg-cta inline-flex h-12 w-full short:h-11 tall:h-13 items-center justify-center gap-2 rounded-full text-[1rem] font-semibold text-white shadow-cta disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none ${activeSlot ? "shine shine-interactive" : ""}`}
           >
             Continue
             <ChevronRight className="h-5 w-5" aria-hidden />

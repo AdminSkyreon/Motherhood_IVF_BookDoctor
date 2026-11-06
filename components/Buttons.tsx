@@ -16,7 +16,9 @@ const base =
   "press inline-flex w-full items-center justify-center gap-2 rounded-full px-6 text-[1.0625rem] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed";
 
 function primaryClasses(tone: Tone) {
-  return `${base} ${fills[tone]} h-14 text-white shadow-cta hover:brightness-105 active:brightness-95 disabled:opacity-55 disabled:shadow-none`;
+  const shine = tone === "pink" ? " shine shine-interactive" : "";
+  const hover = tone === "pink" ? " cta-hover" : " hover:brightness-105 active:brightness-95";
+  return `${base} ${fills[tone]} h-14 text-white shadow-cta disabled:opacity-55 disabled:shadow-none${shine}${hover}`;
 }
 
 const secondaryClasses = `${base} h-14 border border-line bg-white text-brand shadow-sm hover:bg-brand-soft/40 disabled:opacity-55`;

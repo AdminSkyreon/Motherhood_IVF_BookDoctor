@@ -41,6 +41,8 @@ interface AppState {
   slotHeldAt: number | null;
   /** Who this booking is for, set on /book/patient before choosing a doctor. */
   bookingPatient: BookingPatientChoice | null;
+  /** Drives check question enter animation (forward vs back). */
+  checkNavDirection: "forward" | "back";
 
   setCentre: (centreId: string) => void;
   setAnswer: (questionId: string, selected: string[]) => void;
@@ -57,6 +59,7 @@ interface AppState {
   clearSlot: () => void;
   addBooking: (booking: Booking) => void;
   startOver: () => void;
+  setCheckNavDirection: (direction: "forward" | "back") => void;
 }
 
 const initialSelection = {
@@ -73,6 +76,7 @@ const initialFlow = {
   result: null,
   companion: null as Companion | null,
   bookingPatient: null,
+  checkNavDirection: "forward" as const,
   ...initialSelection,
 };
 
@@ -140,6 +144,7 @@ export const useAppStore = create<AppState>()(
               : s.patients,
         })),
       startOver: () => set({ ...initialFlow, bookingPatient: null }),
+      setCheckNavDirection: (checkNavDirection) => set({ checkNavDirection }),
     }),
     {
       name: "motherhood-fertility-check",

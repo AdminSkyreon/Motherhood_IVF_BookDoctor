@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, Clock, Lock, Phone, ShieldCheck } from "lucide-react";
+import { ChevronRight, Phone } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CallbackSheet } from "@/components/CallbackSheet";
@@ -8,16 +8,17 @@ import { PhoneShell } from "@/components/PhoneShell";
 import { EncryptedNotice } from "@/components/Pills";
 import { useAppStore } from "@/lib/store";
 
-const FEATURES = [
-  { icon: Clock, label: "Takes about 2 minutes" },
-  { icon: Lock, label: "Your answers stay private" },
-  { icon: ShieldCheck, label: "Based on clinical guidelines" },
+const STEPS = [
+  "Answer questions about your cycle, health and history",
+  "See your recommendation and the reasons behind it",
+  "Book a specialist, or talk to a counsellor first",
 ];
 
 export default function LandingPage() {
   const router = useRouter();
   const lead = useAppStore((s) => s.lead);
   const startOver = useAppStore((s) => s.startOver);
+  const setCheckNavDirection = useAppStore((s) => s.setCheckNavDirection);
   const [callOpen, setCallOpen] = useState(false);
 
   return (
@@ -32,23 +33,32 @@ export default function LandingPage() {
           developed with Motherhood&apos;s fertility specialists.
         </p>
 
-        <ul className="mt-6 space-y-3 short:mt-4 short:space-y-2 tall:mt-8">
-          {FEATURES.map(({ icon: Icon, label }) => (
-            <li key={label} className="flex items-center gap-3 rounded-2xl border border-sky-line bg-white/90 px-5 py-4 text-[0.9375rem] short:py-3 text-ink">
-              <Icon className="h-5 w-5 text-navy" strokeWidth={1.8} aria-hidden />
-              {label}
+        <ol className="mt-6 space-y-3 short:mt-4 short:space-y-2 tall:mt-8">
+          {STEPS.map((label, i) => (
+            <li
+              key={label}
+              className="flex items-start gap-3 rounded-2xl border border-sky-line bg-white/90 px-5 py-4 text-[0.9375rem] short:py-3 text-ink"
+            >
+              <span
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand text-[0.8125rem] font-bold text-white"
+                aria-hidden
+              >
+                {i + 1}
+              </span>
+              <span className="pt-0.5 leading-snug">{label}</span>
             </li>
           ))}
-        </ul>
+        </ol>
 
         <div className="mt-7 space-y-3 short:mt-5 tall:mt-9">
           <button
             type="button"
             onClick={() => {
               startOver();
+              setCheckNavDirection("forward");
               router.push("/check/1");
             }}
-            className="press shine bg-cta inline-flex h-14 w-full items-center justify-center gap-2 rounded-full text-[1.0625rem] font-semibold text-white shadow-cta transition hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="press shine shine-interactive cta-hover bg-cta inline-flex h-14 w-full items-center justify-center gap-2 rounded-full text-[1.0625rem] font-semibold text-white shadow-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           >
             Begin the check
             <ChevronRight className="h-5 w-5" aria-hidden />
