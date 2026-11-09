@@ -84,19 +84,19 @@ export function QuestionStep({ step }: { step: number }) {
         ) : undefined
       }
     >
-      <div className="flex items-center justify-between">
-        <BackButton href={backHref} onNavigate={() => setCheckNavDirection("back")} />
-        {step === 1 ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100/90 px-3 py-1.5 text-[0.8125rem] text-muted">
-            <Clock className="h-4 w-4" aria-hidden />
-            Takes 2 mins
-          </span>
-        ) : null}
-      </div>
-
-      <div className="mt-5">
-        <ProgressHeader step={step} total={TOTAL_QUESTIONS} />
-      </div>
+      <ProgressHeader
+        step={step}
+        total={TOTAL_QUESTIONS}
+        leading={<BackButton href={backHref} onNavigate={() => setCheckNavDirection("back")} />}
+        meta={
+          step === 1 ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100/90 px-3 py-1.5 text-[0.8125rem] text-muted">
+              <Clock className="h-4 w-4" aria-hidden />
+              Takes 2 mins
+            </span>
+          ) : null
+        }
+      />
 
       <div key={step} className={`question-swap-region ${swapClass}`}>
         <h1 id={`q-${question.id}`} className="mt-8 text-[1.625rem] font-bold leading-[1.25] text-ink short:mt-5 tall:mt-10">
